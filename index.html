@@ -2,8 +2,6 @@
 <html>
 <head>
   <link rel="stylesheet" href="styles.css">
-<!--  <script type = "text/javascript" src="audio-recorder.js"></script>-->
-<!--  <script type = "text/javascript" src="video-player.js"></script>-->
 </head>
 
 
@@ -15,10 +13,12 @@
 <!-- Optional: some overlay text to describe the video -->
 <div class="content">
   <p>talk-to-me</p>
-  <!-- Use a button to pause/play the video with JavaScript -->
-  <button id="videoBtn" onclick="myFunction()">Pause</button>
+  <!-- Button to pause/play the video -->
+  <button id="videoBtn" onclick="VideoPlayer()">Pause</button>
+  <!-- Button to record/play the audio -->
   <button id="audioBtn" onclick="AudioRecorder()">Record and Play</button>
 </div>
+
 
 <script>
 // Get the video
@@ -28,7 +28,7 @@ var video = document.getElementById("video1");
 var btn = document.getElementById("videoBtn");
 
 // Pause and play the video, and change the button text
-function myFunction() {
+function VideoPlayer() {
   if (video.paused) {
     video.play();
     btn.innerHTML = "Pause";
@@ -38,6 +38,7 @@ function myFunction() {
   }
 }
 </script>
+
 
 <script>
 const recordAudio = () => {
