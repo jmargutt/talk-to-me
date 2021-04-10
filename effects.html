@@ -1,0 +1,168 @@
+<!doctype html>
+
+<body>
+<button type="button">Add one more audio!</button>
+
+<script type="text/javascript">
+/* Defining utils to load the audio */
+function BufferLoader(context, urlList, callback) {
+  this.context = context;
+  this.urlList = urlList;
+  this.onload = callback;
+  this.bufferList = new Array();
+  this.loadCount = 0;
+}
+
+BufferLoader.prototype.loadBuffer = function(url, index) {
+  var blob = null
+  var xhr = new XMLHttpRequest()
+  xhr.open("GET", url)
+  xhr.responseType = 'arraybuffer'
+  var loader = this;
+  xhr.onload = function() {
+    // Asynchronously decode the audio file data in request.response
+    loader.context.decodeAudioData(
+      xhr.response,
+      function(buffer) {
+        if (!buffer) {
+          alert('error decoding file data: ' + url);
+          return;
+        }
+        loader.bufferList[index] = buffer;
+        if (++loader.loadCount == loader.urlList.length)
+          loader.onload(loader.bufferList);
+      },
+      function(error) {
+        console.error('decodeAudioData error', error);
+      }
+    );
+  }
+  xhr.onerror = function() {
+    alert('BufferLoader: XHR error');
+  }
+  xhr.send();
+}
+
+BufferLoader.prototype.load = function() {
+  for (var i = 0; i < this.urlList.length; ++i)
+  this.loadBuffer(this.urlList[i], i);
+}
+
+/* Create the AudioContext and load the audio*/
+let context;
+let bufferLoader;
+
+let numberAudio = 0;
+let recordings = [];
+
+document.querySelector('button').addEventListener('click', function() {
+  if(context!=null)
+    context.close();
+  recordings.push('test.mp3');
+  numberAudio ++;
+
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  context = new AudioContext();
+  bufferLoader = new BufferLoader(
+    context,
+    recordings,
+    finishedLoading
+    );
+  bufferLoader.load();
+});
+
+
+/*
+For now the following are defined within the functions, but 
+they could also change in time (e.g., to make the effect degenerate the more the audio is played), and they could depend on the particular source (e.g., for the first recording we may not want too big distortion, but for the second a bit more, etc.)
+*/
+let sources = [];
+let distortions = [];
+let gains = [];
+
+/*Randomly modifies the section of the audio that is played*/
+function changeParam(id, frequencyChange){ 
+  //val are in seconds. Fixed for now but should depend on the audio length I guess, at least the min and max start time.
+  maxDur = 5;
+  minDur = 3;
+  maxStartTime = 5;
+  minStartTime = 2;
+
+  duration = Math.random() * (maxDur - minDur) + minDur;
+  sources[id].loopStart =  Math.random() * (maxStartTime - minStartTime) + minStartTime;
+  sources[id].loopEnd =  sources[id].loopStart + duration;
+  setInterval(function() { changeParam(id, frequencyChange); }, frequencyChange);
+}
+
+/*Randomly modifies the speed, distortion and volume of the audio*/
+function changeFilters(id, frequencyChange) {
+  maxPlaybackRate = 1.5;
+  minPlaybackRate = 0.1;
+  maxAmountDistortion = 405;
+  minAmountDistortion = 395;
+  maxVolume = 1;
+  minVolume = 0.2;
+
+  sources[id].playbackRate.value = Math.random() * (maxPlaybackRate - minPlaybackRate) + minPlaybackRate;
+  distortions[id].curve = makeDistortionCurve(Math.random() * (maxAmountDistortion - minAmountDistortion) + minAmountDistortion);
+  gains[id].gain.value = Math.random() * (maxVolume - minVolume) + minVolume;
+  setInterval(function() { changeFilters(id, frequencyChange); },frequencyChange);
+}
+
+/*Defines the distortion (taken from https://mdn.github.io/voice-change-o-matic/)*/
+function makeDistortionCurve(amount) {
+  var k = typeof amount === 'number' ? amount : 50,
+    n_samples = 44100,
+    curve = new Float32Array(n_samples),
+    deg = Math.PI / 180,
+    i = 0,
+    x;
+  for ( ; i < n_samples; ++i ) {
+    x = i * 2 / n_samples - 1;
+    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+  }
+  return curve;
+};
+
+/**/
+function finishedLoading(bufferList) {
+    console.log(bufferList.length)
+    for (i=0; i<bufferList.length; i++) {
+      sources[i] = context.createBufferSource();
+      distortions[i] = context.createWaveShaper();
+      gains[i] = context.createGain();
+      sources[i].buffer = bufferList[i];
+      sources[i].connect(distortions[i]);
+      distortions[i].connect(gains[i]);
+      gains[i].connect(context.destination);
+      distortions[i].curve = makeDistortionCurve(400);
+      distortions[i].oversample = '4x';
+      sources[i].start(0);
+      sources[i].loop = true;
+      changeParam(i, 7000);
+      changeFilters(i, 5000);
+    }
+
+/*
+    source = context.createBufferSource();
+    distortion = context.createWaveShaper();
+    gainNode = context.createGain();
+    
+    source.buffer = bufferList[0];
+    source.connect(distortion);
+    distortion.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    distortion.curve = makeDistortionCurve(400);
+    distortion.oversample = '4x';
+
+    source.start(0);
+    source.loop = true;
+
+    changeParam();
+    changeFilters();*/
+  }
+
+</script>
+</body>
+</html>
