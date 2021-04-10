@@ -83,10 +83,10 @@ let gains = [];
 /*Randomly modifies the section of the audio that is played*/
 function changeParam(id, frequencyChange){ 
   //val are in seconds. Fixed for now but should depend on the audio length I guess, at least the min and max start time.
-  maxDur = 5;
-  minDur = 3;
+  maxDur = 8;
+  minDur = 2;
   maxStartTime = 5;
-  minStartTime = 2;
+  minStartTime = 0;
 
   duration = Math.random() * (maxDur - minDur) + minDur;
   sources[id].loopStart =  Math.random() * (maxStartTime - minStartTime) + minStartTime;
@@ -97,14 +97,15 @@ function changeParam(id, frequencyChange){
 /*Randomly modifies the speed, distortion and volume of the audio*/
 function changeFilters(id, frequencyChange) {
   maxPlaybackRate = 1.5;
-  minPlaybackRate = 0.1;
-  maxAmountDistortion = 405;
-  minAmountDistortion = 395;
+  minPlaybackRate = 0.5;
+  maxAmountDistortion = 100;
+  minAmountDistortion = 0;
   maxVolume = 1;
-  minVolume = 0.2;
+  minVolume = 0.1;
 
   sources[id].playbackRate.value = Math.random() * (maxPlaybackRate - minPlaybackRate) + minPlaybackRate;
   distortions[id].curve = makeDistortionCurve(Math.random() * (maxAmountDistortion - minAmountDistortion) + minAmountDistortion);
+  distortions[id].oversample = '4x';
   gains[id].gain.value = Math.random() * (maxVolume - minVolume) + minVolume;
   setInterval(function() { changeFilters(id, frequencyChange); },frequencyChange);
 }
@@ -124,43 +125,25 @@ function makeDistortionCurve(amount) {
   return curve;
 };
 
-/**/
+/*The actual loading and*/
 function finishedLoading(bufferList) {
-    console.log(bufferList.length)
+    console.log(bufferList.length);
     for (i=0; i<bufferList.length; i++) {
       sources[i] = context.createBufferSource();
       distortions[i] = context.createWaveShaper();
       gains[i] = context.createGain();
+
       sources[i].buffer = bufferList[i];
       sources[i].connect(distortions[i]);
       distortions[i].connect(gains[i]);
       gains[i].connect(context.destination);
-      distortions[i].curve = makeDistortionCurve(400);
-      distortions[i].oversample = '4x';
+
       sources[i].start(0);
       sources[i].loop = true;
-      changeParam(i, 7000);
+      changeParam(i, 10000);
       changeFilters(i, 5000);
     }
 
-/*
-    source = context.createBufferSource();
-    distortion = context.createWaveShaper();
-    gainNode = context.createGain();
-    
-    source.buffer = bufferList[0];
-    source.connect(distortion);
-    distortion.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    distortion.curve = makeDistortionCurve(400);
-    distortion.oversample = '4x';
-
-    source.start(0);
-    source.loop = true;
-
-    changeParam();
-    changeFilters();*/
   }
 
 </script>
