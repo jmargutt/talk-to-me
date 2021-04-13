@@ -1,28 +1,25 @@
 <!doctype html>
-
-<!-- Add icon library -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
 <html>
 <head>
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<h1>TALK TO ME</h1>
 
-<p>Someone wants to talk to you. Bit first, we need to check that your audio & microphone work.</p>
+<!-- The video -->
+<video id="video1">
+</video>
 
-<p>Press the RECORD button and say something; you should hear it back after a few seconds.<br> If you don't, please check your speakers and/or microphone and try again.</p>
+<!-- Optional: some overlay text to describe the video -->
+<!-- <div class="content"> -->
+  <!-- <p>talk-to-me</p> -->
+  <!-- Button to pause/play the video  -->
+  <!-- <button id="videoBtn" onclick="VideoPlayer()">Pause</button>  -->
+  <!-- Button to record/play the audio -->
+  <!-- <button id="audioBtn" onclick="AudioRecorder()">Record and Play</button> -->
+<!-- </div> -->
 
-<div class="buttonHolder">
-  <button id="audioBtnSimple" onclick="AudioRecorder()">RECORD</button>
-</div>
-
-<p>In the rest of the experience, simply speak when you see the microphone icon flashing</p>
-
-<p>&nbsp;</p>
-
-<div class="micButtonWrapper">
+<div class="bottomBox" id="FlashingMicBox">
+    <div class="micButtonWrapper" id="FlashingMic">
       <div class="outline">
       </div>
       <div class="outline" id="delayed">
@@ -34,17 +31,43 @@
 <g><path d="M500,683.8c84.6,0,153.1-68.6,153.1-153.1V163.1C653.1,78.6,584.6,10,500,10c-84.6,0-153.1,68.6-153.1,153.1v367.5C346.9,615.2,415.4,683.8,500,683.8z M714.4,438.8v91.9C714.4,649,618.4,745,500,745c-118.4,0-214.4-96-214.4-214.4v-91.9h-61.3v91.9c0,141.9,107.2,258.7,245,273.9v124.2H346.9V990h306.3v-61.3H530.6V804.5c137.8-15.2,245-132.1,245-273.9v-91.9H714.4z"/></g>
 </svg>
       </div>
-</div>
-
-<p>&nbsp;</p>
-
-<p>Are you all set?</p>
-
-<div class="buttonHolder">
-  <button id="continueBtn" onclick="location.href = 'http://localhost:8000/video-page.html'">CONTINUE</button>
+    </div>
 </div>
 
 <script>
+// function to wait
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// define an array of videos and add the first one
+var videoSource = new Array();
+videoSource[0]='videos/video-2.mp4';
+videoSource[1]='videos/video-1.mp4';
+document.getElementById("video1").setAttribute("src",videoSource[0]);
+document.getElementById("video1").setAttribute("type","video/mp4");
+
+document.getElementById("FlashingMic").style.visibility = 'hidden';
+
+var video = document.getElementById("video1");
+video.play();
+video.addEventListener('ended', () => EndedFunction(), false);
+
+function EndedFunction() {
+  AudioRecorder();
+  document.getElementById("FlashingMic").style.visibility = 'visible';
+  sleep(6000).then(() => {
+    document.getElementById("FlashingMic").style.visibility = 'hidden';
+    document.getElementById("video1").setAttribute("src",videoSource[1]);
+    document.getElementById("video1").play();
+  });
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// stuff to record and play back
 const recordAudio = () => {
   return new Promise(resolve => {
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -94,7 +117,5 @@ function AudioRecorder() {
 })();
 }
 </script>
-
-<script src="http://cwilso.github.com/AudioContext-MonkeyPatch/AudioContextMonkeyPatch.js"></script>
 
 </html>
