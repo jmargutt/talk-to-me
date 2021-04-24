@@ -6,7 +6,7 @@
 
 
 <!-- The video -->
-<video id="video1">
+<video id="video">
 </video>
 
 <!-- Optional: some overlay text to describe the video -->
@@ -42,25 +42,33 @@ function sleep(ms) {
 
 // define an array of videos and add the first one
 var videoSource = new Array();
-videoSource[0]='videos/video-2.mp4';
-videoSource[1]='videos/video-1.mp4';
-document.getElementById("video1").setAttribute("src",videoSource[0]);
-document.getElementById("video1").setAttribute("type","video/mp4");
+videoSource[0]='videos/test-1.mp4';
+videoSource[1]='videos/test-2.mp4';
+videoSource[2]='videos/test-3.mp4';
+var counter = 1;
+document.getElementById("video").setAttribute("src",videoSource[0]);
+document.getElementById("video").setAttribute("type","video/mp4");
 
+// hide microphone until video is finished
 document.getElementById("FlashingMic").style.visibility = 'hidden';
 
-var video = document.getElementById("video1");
+// play video
+var video = document.getElementById("video");
 video.play();
-video.addEventListener('ended', () => EndedFunction(), false);
 
+// what to do at the end of each video
+video.addEventListener('ended', () => EndedFunction(), false);
 function EndedFunction() {
-  AudioRecorder();
-  document.getElementById("FlashingMic").style.visibility = 'visible';
-  sleep(6000).then(() => {
-    document.getElementById("FlashingMic").style.visibility = 'hidden';
-    document.getElementById("video1").setAttribute("src",videoSource[1]);
-    document.getElementById("video1").play();
-  });
+  if (counter < videoSource.length) {
+    AudioRecorder();
+    document.getElementById("FlashingMic").style.visibility = 'visible';
+    sleep(5000).then(() => {
+      document.getElementById("FlashingMic").style.visibility = 'hidden';
+      document.getElementById("video").setAttribute("src",videoSource[counter]);
+      document.getElementById("video").play();
+      counter++;
+    });
+  }
 }
 
 function sleep(ms) {
@@ -112,7 +120,9 @@ function AudioRecorder() {
 
   setTimeout(async () => {
     const audio = await recorder.stop();
-    audio.play();
+    sleep(2000).then(() => {
+      audio.play();
+    });
   }, 3000);
 })();
 }
